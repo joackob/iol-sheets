@@ -23,7 +23,7 @@ class MockIOLClient(IOLClient):
             "apertura": 123.0,
             "maximo": 123.0,
             "minimo": 123.0,
-            "fechaHora": datetime.datetime.now().isoformat(),
+            "fechaHora": datetime.datetime.now(),
             "tendencia": "sube",
             "cierreAnterior": 123.0,
             "montoOperado": 123.0,
@@ -55,11 +55,10 @@ class MockIOLClient(IOLClient):
 
 
 @pytest.mark.asyncio
-async def test_get_hisctorico_del_ultimo_mes():
+async def test_append_a_cotizacion_mock():
     mock_iol = MockIOLClient()
     sheet_client = SheetClient(
         spreadsheet_id=os.getenv("SPREADSHEET_ID") or "",
-        token_file=os.getenv("TOKEN_FILE_JSON") or "",
         credentials_file=os.getenv("CREDENTIALS_FILE_JSON") or "",
         iol_api=mock_iol,
         scopes=[Scope.WRITEABLE],
@@ -73,3 +72,25 @@ async def test_get_hisctorico_del_ultimo_mes():
 
     assert mock_iol.was_called
     assert res.get("updates").get("updatedCells") == 32
+
+
+@pytest.mark.asyncio
+async def test_append_a_cotizacion_real():
+    mock_iol = IOLClient(
+        username=os.getenv("IOL_USER") or "",
+        password=os.getenv("IOL_PASS") or "",
+    )
+    sheet_client = SheetClient(
+        spreadsheet_id=os.getenv("SPREADSHEET_ID") or "",
+        credentials_file=os.getenv("CREDENTIALS_FILE_JSON") or "",
+        iol_api=mock_iol,
+        scopes=[Scope.WRITEABLE],
+    )
+
+    res = await sheet_client.append_cotizacion_titulo(
+        simbolo="GGAL",
+        mercado=Mercado.BCBA,
+        plazo=Plazo.T0,
+    )
+
+    assert res.get("updates").get("updatedCells") >= 32

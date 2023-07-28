@@ -1,7 +1,5 @@
-from __future__ import print_function
-from enum import Enum
-
 from .logger import Logger
+from .constants import Scope
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from iol_client.client import IOLClient
@@ -11,24 +9,10 @@ import pandas as pd
 import os
 
 
-class Scope(Enum):
-    def __str__(self) -> str:
-        return self.value
-
-    READONLY = "https://www.googleapis.com/auth/spreadsheets.readonly"
-    WRITEABLE = "https://www.googleapis.com/auth/spreadsheets"
-
-
-# to be deprecated
-def flat_cotizacion(cotizacion):
-    cant_puntas = len(cotizacion["puntas"])
-
-
 class SheetClient:
     def __init__(
         self,
         spreadsheet_id: str,
-        token_file: str,
         credentials_file: str,
         iol_api: IOLClient,
         scopes: list[Scope] = [Scope.READONLY],
@@ -38,21 +22,6 @@ class SheetClient:
         self.iol_api = iol_api
         self.creds = None
 
-        # if os.path.exists(token_file):
-        #     self.creds = Credentials.from_authorized_user_file(
-        #         filename=token_file, scopes=map(str, scopes)
-        #     )
-
-        # if not self.creds or not self.creds.valid:
-        #     if self.creds and self.creds.expired and self.creds.refresh_token:
-        #         self.creds.refresh(Request())
-        #     else:
-        #         flow = InstalledAppFlow.from_client_secrets_file(
-        #             credentials_file, scopes=map(str, scopes)
-        #         )
-        #         self.creds = flow.run_local_server(port=0)
-        #     with open(token_file, "w") as token:
-        #         token.write(self.creds.to_json())
         if os.path.exists(credentials_file):
             self.creds = service_account.Credentials.from_service_account_file(
                 credentials_file, scopes=map(str, scopes)
@@ -81,6 +50,9 @@ class SheetClient:
             ]
 
             df_cotizacion = pd.DataFrame(data=cotizacion_flatted)
+            df_cotizacion["fechaHora"] = df_cotizacion["fechaHora"].dt.strftime(
+                "%d/%m/%Y %H:%M:%S"
+            )
             df_cotizacion = df_cotizacion.drop(columns=["puntas"])
             array_cotizacion = df_cotizacion.to_numpy().tolist()
 
