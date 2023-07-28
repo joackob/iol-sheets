@@ -49,12 +49,21 @@ class SheetClient:
                 for punta in cotizacion["puntas"]
             ]
 
-            df_cotizacion = pd.DataFrame(data=cotizacion_flatted)
-            df_cotizacion["fechaHora"] = df_cotizacion["fechaHora"].dt.strftime(
-                "%d/%m/%Y %H:%M:%S"
-            )
-            df_cotizacion = df_cotizacion.drop(columns=["puntas"])
-            array_cotizacion = df_cotizacion.to_numpy().tolist()
+            array_cotizacion = []
+            if len(cotizacion["puntas"]) > 0:
+                df_cotizacion = pd.DataFrame(data=cotizacion_flatted)
+                df_cotizacion["fechaHora"] = df_cotizacion["fechaHora"].dt.strftime(
+                    "%d/%m/%Y %H:%M:%S"
+                )
+                df_cotizacion = df_cotizacion.drop(columns=["puntas"])
+                array_cotizacion = df_cotizacion.to_numpy().tolist()
+            else:
+                cotizacion["fechaHora"] = cotizacion["fechaHora"].strftime(
+                    "%d/%m/%Y %H:%M:%S"
+                )
+                array_cotizacion = [
+                    [cotizacion[k] for k in cotizacion.keys() if k != "puntas"]
+                ]
 
             service = build(serviceName="sheets", version="v4", credentials=self.creds)
             body = {"values": array_cotizacion}

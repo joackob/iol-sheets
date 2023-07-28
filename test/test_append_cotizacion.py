@@ -54,6 +54,47 @@ class MockIOLClient(IOLClient):
         }
 
 
+class MockIOLClientT1(IOLClient):
+    def __init__(self) -> None:
+        self.was_called = False
+
+    async def get_titulo_cotizacion_plazo(
+        self, simbolo: str, mercado: Mercado, plazo: Plazo
+    ):
+        self.was_called = True
+        return {
+            "operableCompra": True,
+            "operableVenta": False,
+            "visible": True,
+            "ultimoPrecio": 123.0,
+            "variacion": 123.0,
+            "apertura": 123.0,
+            "maximo": 123.0,
+            "minimo": 123.0,
+            "fechaHora": datetime.datetime.now(),
+            "tendencia": "sube",
+            "cierreAnterior": 123.0,
+            "montoOperado": 123.0,
+            "volumenNominal": 123.0,
+            "precioPromedio": 123,
+            "moneda": "peso_Argentino",
+            "precioAjuste": 0.0,
+            "interesesAbiertos": 0.0,
+            "puntas": [],
+            "cantidadOperaciones": 123,
+            "simbolo": "GGAL",
+            "pais": "Argentina",
+            "mercado": "BCBA",
+            "tipo": "ACCIONES",
+            "descripcionTitulo": "Grupo Financiero Galicia",
+            "plazo": "T0",
+            "laminaMinima": 123,
+            "lote": 123,
+            "cantidadMinima": 123,
+            "puntosVariacion": 123,
+        }
+
+
 @pytest.mark.asyncio
 async def test_append_a_cotizacion_mock():
     mock_iol = MockIOLClient()
@@ -94,3 +135,22 @@ async def test_append_a_cotizacion_real():
     )
 
     assert res.get("updates").get("updatedCells") >= 32
+
+
+@pytest.mark.asyncio
+async def test_append_a_cotizacion_real_with_plazo_t1():
+    mock_iol = MockIOLClientT1()
+    sheet_client = SheetClient(
+        spreadsheet_id=os.getenv("SPREADSHEET_ID") or "",
+        credentials_file=os.getenv("CREDENTIALS_FILE_JSON") or "",
+        iol_api=mock_iol,
+        scopes=[Scope.WRITEABLE],
+    )
+
+    res = await sheet_client.append_cotizacion_titulo(
+        simbolo="GGAL",
+        mercado=Mercado.BCBA,
+        plazo=Plazo.T1,
+    )
+
+    assert res.get("updates").get("updatedCells") == 28
