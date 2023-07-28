@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "iol_sheets"
+version = "0.1.0"
+description = "App to show data from iol api in google sheets"
+authors = ["Joaquin Blanco"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+iol-client = {git = "https://github.com/joackob/iol_client.git"}
+google-api-python-client = "^2.95.0"
+google-auth-httplib2 = "^0.1.0"
+google-auth-oauthlib = "^1.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
